@@ -139,17 +139,6 @@ The server maintains active sessions with:
 - Command history tracking
 - Activity timestamp updates
 
-## Extending the Implementation
-
-To extend this implementation, consider:
-
-1. Adding support for TCP port forwarding
-2. Implementing terminal features (PTY allocation)
-3. Adding SFTP functionality for file transfers
-4. Enhancing authentication with more methods (keyboard-interactive, etc.)
-5. Implementing host key verification and management
-6. Adding support for compression
-
 ## License
 
 This project is provided for educational purposes only.

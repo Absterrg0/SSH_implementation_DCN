@@ -491,21 +491,43 @@ class SSHServer:
     
     def _execute_command(self, command: str) -> str:
         """Execute a command and return the output."""
-        # This is a simplified implementation that doesn't actually execute system commands
-        # In a real implementation, you would use subprocess or similar to execute commands
-        
-        if command == "help":
-            return "Available commands: help, whoami, date, uptime, exit"
-        elif command == "whoami":
-            return "SSH Server User"
-        elif command == "date":
-            return time.strftime("%Y-%m-%d %H:%M:%S")
-        elif command == "uptime":
-            return f"Server uptime: {time.time()} seconds"
-        elif command.startswith("echo "):
-            return command[5:]
-        else:
-            return f"Command not found: {command}"
+        try:
+            # Handle special commands
+            if command == "help":
+                return "Available commands: help, whoami, date, uptime, exit, cd, ls, pwd, echo"
+            elif command == "exit":
+                return "exit"  # Special case handled by command loop
+                
+            # Execute actual system commands using subprocess
+            import subprocess
+            import os
+            
+            # Handle cd command separately since it needs to modify the current directory
+            if command.startswith("cd "):
+                new_dir = command[3:].strip()
+                try:
+                    os.chdir(new_dir)
+                    return f"Changed directory to {os.getcwd()}"
+                except Exception as e:
+                    return f"Error changing directory: {str(e)}"
+            
+            # Execute other commands
+            process = subprocess.Popen(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
+            )
+            
+            stdout, stderr = process.communicate()
+            
+            if stderr:
+                return f"Error: {stderr}"
+            return stdout.strip() if stdout else ""
+            
+        except Exception as e:
+            return f"Error executing command: {str(e)}"
 
 
 class SSHClient:
