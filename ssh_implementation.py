@@ -494,13 +494,22 @@ class SSHServer:
         try:
             # Handle special commands
             if command == "help":
-                return "Available commands: help, whoami, date, uptime, exit, cd, ls, pwd, echo"
+                return """Available commands:
+- Basic: help, whoami, date, uptime, exit
+- File operations: ls, cd, pwd, cat, touch, rm, mkdir, rmdir
+- Text editors: vi, nano
+- Process: ps, top, kill
+- Network: ifconfig, netstat, ping
+- System: df, du, free, uname
+- Search: find, grep
+- Others: echo, clear, history"""
             elif command == "exit":
                 return "exit"  # Special case handled by command loop
                 
             # Execute actual system commands using subprocess
             import subprocess
             import os
+            import shutil
             
             # Handle cd command separately since it needs to modify the current directory
             if command.startswith("cd "):
@@ -510,6 +519,64 @@ class SSHServer:
                     return f"Changed directory to {os.getcwd()}"
                 except Exception as e:
                     return f"Error changing directory: {str(e)}"
+            
+            # Handle vi command separately to ensure proper terminal setup
+            if command.startswith("vi "):
+                try:
+                    # Check if vi is installed
+                    if not shutil.which("vi"):
+                        return "Error: vi editor is not installed"
+                    
+                    # Get the file path
+                    file_path = command[3:].strip()
+                    
+                    # Create a new terminal session for vi
+                    process = subprocess.Popen(
+                        ["vi", file_path],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+                    
+                    # Wait for vi to complete
+                    process.wait()
+                    return f"Vi editor closed for {file_path}"
+                except Exception as e:
+                    return f"Error opening vi: {str(e)}"
+            
+            # Handle nano command separately
+            if command.startswith("nano "):
+                try:
+                    # Check if nano is installed
+                    if not shutil.which("nano"):
+                        return "Error: nano editor is not installed"
+                    
+                    # Get the file path
+                    file_path = command[5:].strip()
+                    
+                    # Create a new terminal session for nano
+                    process = subprocess.Popen(
+                        ["nano", file_path],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+                    
+                    # Wait for nano to complete
+                    process.wait()
+                    return f"Nano editor closed for {file_path}"
+                except Exception as e:
+                    return f"Error opening nano: {str(e)}"
+            
+            # Handle clear command
+            if command == "clear":
+                return "\033[2J\033[H"  # ANSI escape sequence to clear screen
+            
+            # Handle history command
+            if command == "history":
+                return "\n".join(self.commands_history)
             
             # Execute other commands
             process = subprocess.Popen(
